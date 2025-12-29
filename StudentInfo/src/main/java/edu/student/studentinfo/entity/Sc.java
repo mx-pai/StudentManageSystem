@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class Sc {
     private String sno;
-    private String con;
+    private String cno;
     private Integer grade;
     private String semester;
     private String teachingClass;
