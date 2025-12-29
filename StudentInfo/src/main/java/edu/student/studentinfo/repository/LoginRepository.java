@@ -21,8 +21,8 @@ public class LoginRepository {
     }
 
     public int register(String name, String password) {
-        String sql = "insert into login(name, password) value(?, ?)";
-        return jdbcTemplate.update(sql);
+        String sql = "insert into login(name, password) values(?, ?)";
+        return jdbcTemplate.update(sql, name, password);
     }
 
 }

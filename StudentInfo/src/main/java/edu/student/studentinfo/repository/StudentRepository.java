@@ -38,7 +38,7 @@ public class StudentRepository {
                 student.getSmajor());
     }
     //删除学生
-    public int delete(String sno){
+    public int deleteBySno(String sno){
         String sql = "DELETE FROM student where sno = ?";
         return jdbcTemplate.update(sql);
     }
@@ -57,7 +57,4 @@ public class StudentRepository {
         String sql = "SELECT COUNT(*) FROM student";
         return jdbcTemplate.queryForObject(sql, Integer.class);
     }
-
-
-
 }
