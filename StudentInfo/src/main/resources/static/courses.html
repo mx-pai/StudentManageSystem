@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课程管理 - 学生信息管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="sidebar"></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="page-header">
+                <h2 id="pageTitle">课程管理</h2>
+                <button class="btn btn-primary" id="addBtn" onclick="openAddModal()" style="display:none;">
+                    <i class="bi bi-plus-lg me-1"></i>新增课程
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>课程号</th>
+                            <th>课程名</th>
+                            <th>学分</th>
+                            <th>先修课</th>
+                            <th id="thAction" style="display:none;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="5" class="text-center py-4">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 模态框 -->
+    <div class="modal fade" id="courseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增课程</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="courseForm">
+                        <input type="hidden" id="editMode" value="add">
+                        <div class="mb-3">
+                            <label class="form-label" for="cno">课程号</label>
+                            <input type="text" class="form-control" id="cno" placeholder="请输入课程号" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="cname">课程名</label>
+                            <input type="text" class="form-control" id="cname" placeholder="请输入课程名" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="ccredit">学分</label>
+                            <input type="number" class="form-control" id="ccredit" min="1" max="10" placeholder="1-10">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="cpno">先修课程号</label>
+                            <input type="text" class="form-control" id="cpno" placeholder="可选">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCourse()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        const user = checkAuth();
+        const role = user?.role || 'student';
+
+        document.getElementById('sidebar').innerHTML = getSidebarHTML('courses');
+
+        // 根据角色调整界面
+        if (role === 'teacher') {
+            document.getElementById('addBtn').style.display = 'inline-block';
+            document.getElementById('thAction').style.display = '';
+        } else {
+            document.getElementById('pageTitle').textContent = '课程列表';
+        }
+
+        let modal;
+        document.addEventListener('DOMContentLoaded', () => {
+            modal = new bootstrap.Modal(document.getElementById('courseModal'));
+            loadCourses();
+        });
+
+        async function loadCourses() {
+            try {
+                const res = await api.getCourses();
+                const courses = res.data.data || [];
+                const tbody = document.getElementById('tableBody');
+
+                if (courses.length === 0) {
+                    const colspan = role === 'teacher' ? 5 : 4;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4">暂无数据</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = courses.map(c => {
+                    const actionCell = role === 'teacher' ? `
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal('${c.cno}')" title="编辑">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCourse('${c.cno}')" title="删除">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    ` : '';
+
+                    return `
+                        <tr>
+                            <td>${c.cno}</td>
+                            <td>${c.cname}</td>
+                            <td>${c.ccredit || '-'}</td>
+                            <td>${c.cpno || '-'}</td>
+                            ${actionCell}
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        function openAddModal() {
+            if (role !== 'teacher') return;
+            document.getElementById('modalTitle').textContent = '新增课程';
+            document.getElementById('editMode').value = 'add';
+            document.getElementById('courseForm').reset();
+            document.getElementById('cno').disabled = false;
+            modal.show();
+        }
+
+        async function openEditModal(cno) {
+            if (role !== 'teacher') return;
+            try {
+                const res = await api.getCourse(cno);
+                const c = res.data.data;
+                document.getElementById('modalTitle').textContent = '编辑课程';
+                document.getElementById('editMode').value = 'edit';
+                document.getElementById('cno').value = c.cno;
+                document.getElementById('cno').disabled = true;
+                document.getElementById('cname').value = c.cname || '';
+                document.getElementById('ccredit').value = c.ccredit || '';
+                document.getElementById('cpno').value = c.cpno || '';
+                modal.show();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        async function saveCourse() {
+            if (role !== 'teacher') return;
+            const editMode = document.getElementById('editMode').value;
+            const data = {
+                cno: document.getElementById('cno').value,
+                cname: document.getElementById('cname').value,
+                ccredit: parseInt(document.getElementById('ccredit').value) || null,
+                cpno: document.getElementById('cpno').value || null
+            };
+
+            try {
+                if (editMode === 'add') {
+                    await api.addCourse(data);
+                    showToast('添加成功');
+                } else {
+                    await api.updateCourse(data.cno, data);
+                    showToast('更新成功');
+                }
+                modal.hide();
+                loadCourses();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        async function deleteCourse(cno) {
+            if (role !== 'teacher') return;
+            if (!showConfirm('确定要删除该课程吗？')) return;
+            try {
+                await api.deleteCourse(cno);
+                showToast('删除成功');
+                loadCourses();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+    </script>
+</body>
+
+</html>

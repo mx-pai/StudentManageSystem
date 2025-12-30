@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表盘 - 学生信息管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="sidebar"></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="page-header">
+                <h2>仪表盘</h2>
+                <span class="text-muted" id="welcomeMsg"></span>
+            </div>
+
+            <!-- 老师看到的统计卡片 -->
+            <div class="row g-4 mb-4" id="teacherStats" style="display:none;">
+                <div class="col-md-4">
+                    <div class="stat-card primary">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-label">学生总数</div>
+                                <div class="stat-value" id="studentCount">-</div>
+                            </div>
+                            <i class="bi bi-people stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card success">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-label">课程总数</div>
+                                <div class="stat-value" id="courseCount">-</div>
+                            </div>
+                            <i class="bi bi-book stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card info">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-label">选课记录</div>
+                                <div class="stat-value" id="selectionCount">-</div>
+                            </div>
+                            <i class="bi bi-card-checklist stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学生看到的统计卡片 -->
+            <div class="row g-4 mb-4" id="studentStats" style="display:none;">
+                <div class="col-md-4">
+                    <div class="stat-card primary">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-label">已选课程</div>
+                                <div class="stat-value" id="mySelectionCount">-</div>
+                            </div>
+                            <i class="bi bi-journal-check stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card success">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-label">可选课程</div>
+                                <div class="stat-value" id="availableCourseCount">-</div>
+                            </div>
+                            <i class="bi bi-book stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card warning">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="stat-label">已有成绩</div>
+                                <div class="stat-value" id="gradedCount">-</div>
+                            </div>
+                            <i class="bi bi-award stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="table-container p-3">
+                        <h5 class="mb-3">快捷操作</h5>
+                        <!-- 老师的快捷操作 -->
+                        <div class="gap-2" id="teacherActions" style="display:none;">
+                            <a href="students.html" class="btn btn-outline-primary d-block mb-2">
+                                <i class="bi bi-people me-2"></i>管理学生
+                            </a>
+                            <a href="courses.html" class="btn btn-outline-primary d-block mb-2">
+                                <i class="bi bi-book me-2"></i>管理课程
+                            </a>
+                            <a href="selections.html" class="btn btn-outline-primary d-block">
+                                <i class="bi bi-card-checklist me-2"></i>管理选课
+                            </a>
+                        </div>
+                        <!-- 学生的快捷操作 -->
+                        <div class="gap-2" id="studentActions" style="display:none;">
+                            <a href="courses.html" class="btn btn-outline-primary d-block mb-2">
+                                <i class="bi bi-book me-2"></i>浏览课程
+                            </a>
+                            <a href="selections.html" class="btn btn-outline-primary d-block mb-2">
+                                <i class="bi bi-plus-circle me-2"></i>去选课
+                            </a>
+                            <a href="selections.html" class="btn btn-outline-success d-block">
+                                <i class="bi bi-journal-check me-2"></i>查看我的选课
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学生：显示我的选课列表 -->
+                <div class="col-md-6" id="myCoursesPanel" style="display:none;">
+                    <div class="table-container p-3">
+                        <h5 class="mb-3">我的课程</h5>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>课程号</th>
+                                    <th>成绩</th>
+                                    <th>学期</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myCoursesBody">
+                                <tr>
+                                    <td colspan="3" class="text-center">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        const user = checkAuth();
+        const role = user?.role || 'student';
+        const currentUserName = user?.name || '';
+
+        document.getElementById('sidebar').innerHTML = getSidebarHTML('dashboard');
+        document.getElementById('welcomeMsg').textContent = `欢迎, ${currentUserName}`;
+
+        // 根据角色显示不同内容
+        if (role === 'teacher') {
+            document.getElementById('teacherStats').style.display = 'flex';
+            document.getElementById('teacherActions').style.display = 'block';
+            loadTeacherStats();
+        } else {
+            document.getElementById('studentStats').style.display = 'flex';
+            document.getElementById('studentActions').style.display = 'block';
+            document.getElementById('myCoursesPanel').style.display = 'block';
+            loadStudentStats();
+        }
+
+        // 老师的统计数据
+        async function loadTeacherStats() {
+            try {
+                const [studentsRes, coursesRes, selectionsRes] = await Promise.all([
+                    api.countStudents().catch(() => ({ data: { data: 0 } })),
+                    api.getCourses(),
+                    api.getSelections()
+                ]);
+                document.getElementById('studentCount').textContent = studentsRes.data.data || 0;
+                document.getElementById('courseCount').textContent = coursesRes.data.data?.length || 0;
+                document.getElementById('selectionCount').textContent = selectionsRes.data.data?.length || 0;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // 学生的统计数据
+        async function loadStudentStats() {
+            try {
+                const [coursesRes, mySelectionsRes] = await Promise.all([
+                    api.getCourses(),
+                    api.getStudentSelections(currentUserName).catch(() => ({ data: { data: [] } }))
+                ]);
+
+                const allCourses = coursesRes.data.data || [];
+                const mySelections = mySelectionsRes.data.data || [];
+                const gradedSelections = mySelections.filter(s => s.grade !== null);
+
+                document.getElementById('mySelectionCount').textContent = mySelections.length;
+                document.getElementById('availableCourseCount').textContent = allCourses.length;
+                document.getElementById('gradedCount').textContent = gradedSelections.length;
+
+                // 渲染我的课程列表
+                const tbody = document.getElementById('myCoursesBody');
+                if (mySelections.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">暂无选课</td></tr>';
+                } else {
+                    tbody.innerHTML = mySelections.slice(0, 5).map(s => `
+                        <tr>
+                            <td>${s.cno}</td>
+                            <td>${s.grade !== null ? s.grade : '<span class="text-muted">未录入</span>'}</td>
+                            <td>${s.semester || '-'}</td>
+                        </tr>
+                    `).join('');
+                    if (mySelections.length > 5) {
+                        tbody.innerHTML += `<tr><td colspan="3" class="text-center"><a href="selections.html">查看全部 ${mySelections.length} 门课程</a></td></tr>`;
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+
+</html>

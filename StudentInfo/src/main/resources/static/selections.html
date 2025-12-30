@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选课管理 - 学生信息管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="sidebar"></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="page-header">
+                <h2 id="pageTitle">选课管理</h2>
+                <button class="btn btn-primary" id="addBtn" onclick="openSelectModal()">
+                    <i class="bi bi-plus-lg me-1"></i>新增选课
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th id="thSno">学号</th>
+                            <th>课程号</th>
+                            <th>成绩</th>
+                            <th>学期</th>
+                            <th>班级</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-4">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 选课模态框 -->
+    <div class="modal fade" id="selectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">选课</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="selectForm">
+                        <div class="mb-3" id="snoGroup">
+                            <label class="form-label" for="sno">学号</label>
+                            <input type="text" class="form-control" id="sno" placeholder="请输入学号" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="cno">课程号</label>
+                            <input type="text" class="form-control" id="cno" placeholder="请输入课程号" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="semester">学期</label>
+                            <input type="text" class="form-control" id="semester" placeholder="如: 2024-1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="teachingClass">班级</label>
+                            <input type="text" class="form-control" id="teachingClass" placeholder="如: 1班">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitSelect()">确认选课</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成绩录入模态框（仅老师可用） -->
+    <div class="modal fade" id="gradeModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">录入成绩</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="gradeSno">
+                    <input type="hidden" id="gradeCno">
+                    <div class="mb-3">
+                        <label class="form-label" for="gradeValue">成绩</label>
+                        <input type="number" class="form-control" id="gradeValue" min="0" max="100" placeholder="0-100">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitGrade()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        const user = checkAuth();
+        const role = user?.role || 'student';
+        const currentUserName = user?.name || '';
+
+        document.getElementById('sidebar').innerHTML = getSidebarHTML('selections');
+
+        // 根据角色调整界面
+        if (role === 'student') {
+            document.getElementById('pageTitle').textContent = '我的选课';
+            document.getElementById('addBtn').innerHTML = '<i class="bi bi-plus-lg me-1"></i>选课';
+            document.getElementById('thSno').style.display = 'none'; // 隐藏学号列
+            document.getElementById('snoGroup').style.display = 'none'; // 隐藏学号输入
+        }
+
+        let selectModal, gradeModal;
+        document.addEventListener('DOMContentLoaded', () => {
+            selectModal = new bootstrap.Modal(document.getElementById('selectModal'));
+            gradeModal = new bootstrap.Modal(document.getElementById('gradeModal'));
+            loadSelections();
+        });
+
+        async function loadSelections() {
+            try {
+                let res;
+                if (role === 'student') {
+                    // 学生只能看自己的选课（用用户名当学号查询）
+                    res = await api.getStudentSelections(currentUserName);
+                } else {
+                    // 老师可以看所有选课
+                    res = await api.getSelections();
+                }
+                const selections = res.data.data || [];
+                const tbody = document.getElementById('tableBody');
+
+                if (selections.length === 0) {
+                    const colspan = role === 'student' ? 5 : 6;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4">暂无数据</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = selections.map(s => {
+                    const snoCell = role === 'student' ? '' : `<td>${s.sno}</td>`;
+                    const gradeDisplay = s.grade !== null ? s.grade : '<span class="text-muted">未录入</span>';
+
+                    let actionBtns = '';
+                    if (role === 'teacher') {
+                        // 老师：录入成绩 + 退课
+                        actionBtns = `
+                            <button class="btn btn-sm btn-outline-success me-1" onclick="openGradeModal('${s.sno}', '${s.cno}', ${s.grade})" title="录入成绩">
+                                <i class="bi bi-pencil-square"></i> 成绩
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="dropCourse('${s.sno}', '${s.cno}')" title="退课">
+                                <i class="bi bi-x-circle"></i> 退课
+                            </button>
+                        `;
+                    } else {
+                        // 学生：只能退课
+                        actionBtns = `
+                            <button class="btn btn-sm btn-outline-danger" onclick="dropCourse('${s.sno}', '${s.cno}')" title="退课">
+                                <i class="bi bi-x-circle"></i> 退课
+                            </button>
+                        `;
+                    }
+
+                    return `
+                        <tr>
+                            ${snoCell}
+                            <td>${s.cno}</td>
+                            <td>${gradeDisplay}</td>
+                            <td>${s.semester || '-'}</td>
+                            <td>${s.teachingClass || '-'}</td>
+                            <td>${actionBtns}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        function openSelectModal() {
+            document.getElementById('selectForm').reset();
+            if (role === 'student') {
+                // 学生选课时自动填入自己的学号
+                document.getElementById('sno').value = currentUserName;
+            }
+            selectModal.show();
+        }
+
+        async function submitSelect() {
+            const data = {
+                sno: role === 'student' ? currentUserName : document.getElementById('sno').value,
+                cno: document.getElementById('cno').value,
+                semester: document.getElementById('semester').value || null,
+                teachingClass: document.getElementById('teachingClass').value || null
+            };
+
+            try {
+                await api.select(data);
+                showToast('选课成功');
+                selectModal.hide();
+                loadSelections();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        function openGradeModal(sno, cno, grade) {
+            if (role !== 'teacher') {
+                showToast('只有老师才能录入成绩', 'warning');
+                return;
+            }
+            document.getElementById('gradeSno').value = sno;
+            document.getElementById('gradeCno').value = cno;
+            document.getElementById('gradeValue').value = grade !== null && grade !== 'null' ? grade : '';
+            gradeModal.show();
+        }
+
+        async function submitGrade() {
+            const sno = document.getElementById('gradeSno').value;
+            const cno = document.getElementById('gradeCno').value;
+            const grade = parseInt(document.getElementById('gradeValue').value);
+
+            try {
+                await api.updateGrade(sno, cno, grade);
+                showToast('成绩录入成功');
+                gradeModal.hide();
+                loadSelections();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        async function dropCourse(sno, cno) {
+            // 学生只能退自己的课
+            if (role === 'student' && sno !== currentUserName) {
+                showToast('您只能退自己的课', 'warning');
+                return;
+            }
+            if (!showConfirm('确定要退选该课程吗？')) return;
+            try {
+                await api.drop(sno, cno);
+                showToast('退课成功');
+                loadSelections();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+    </script>
+</body>
+
+</html>

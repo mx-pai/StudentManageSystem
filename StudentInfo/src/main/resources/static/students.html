@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生管理 - 学生信息管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="sidebar"></div>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="page-header">
+                <h2>学生管理</h2>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <i class="bi bi-plus-lg me-1"></i>新增学生
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>学号</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>出生日期</th>
+                            <th>专业</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-4">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 模态框 -->
+    <div class="modal fade" id="studentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增学生</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="studentForm">
+                        <input type="hidden" id="editMode" value="add">
+                        <div class="mb-3">
+                            <label class="form-label" for="sno">学号</label>
+                            <input type="text" class="form-control" id="sno" placeholder="请输入学号" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="sname">姓名</label>
+                            <input type="text" class="form-control" id="sname" placeholder="请输入姓名" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="ssex">性别</label>
+                            <select class="form-select" id="ssex" title="选择性别">
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="sbirthdate">出生日期</label>
+                            <input type="date" class="form-control" id="sbirthdate" placeholder="选择日期">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="smajor">专业</label>
+                            <input type="text" class="form-control" id="smajor" placeholder="请输入专业">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveStudent()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        const user = checkAuth();
+
+        // 只有老师可以访问此页面
+        if (!checkTeacherOnly()) {
+            // 页面会跳转，下面的代码不会执行
+        }
+
+        document.getElementById('sidebar').innerHTML = getSidebarHTML('students');
+
+        let modal;
+        document.addEventListener('DOMContentLoaded', () => {
+            modal = new bootstrap.Modal(document.getElementById('studentModal'));
+            loadStudents();
+        });
+
+        async function loadStudents() {
+            try {
+                const res = await api.getStudents();
+                const students = res.data.data || [];
+                const tbody = document.getElementById('tableBody');
+
+                if (students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">暂无数据</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = students.map(s => `
+                    <tr>
+                        <td>${s.sno}</td>
+                        <td>${s.sname}</td>
+                        <td>${s.ssex || '-'}</td>
+                        <td>${s.sbirthdate || '-'}</td>
+                        <td>${s.smajor || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal('${s.sno}')" title="编辑">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent('${s.sno}')" title="删除">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '新增学生';
+            document.getElementById('editMode').value = 'add';
+            document.getElementById('studentForm').reset();
+            document.getElementById('sno').disabled = false;
+            modal.show();
+        }
+
+        async function openEditModal(sno) {
+            try {
+                const res = await api.getStudent(sno);
+                const s = res.data.data;
+                document.getElementById('modalTitle').textContent = '编辑学生';
+                document.getElementById('editMode').value = 'edit';
+                document.getElementById('sno').value = s.sno;
+                document.getElementById('sno').disabled = true;
+                document.getElementById('sname').value = s.sname || '';
+                document.getElementById('ssex').value = s.ssex || '男';
+                document.getElementById('sbirthdate').value = s.sbirthdate || '';
+                document.getElementById('smajor').value = s.smajor || '';
+                modal.show();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        async function saveStudent() {
+            const editMode = document.getElementById('editMode').value;
+            const data = {
+                sno: document.getElementById('sno').value,
+                sname: document.getElementById('sname').value,
+                ssex: document.getElementById('ssex').value,
+                sbirthdate: document.getElementById('sbirthdate').value || null,
+                smajor: document.getElementById('smajor').value
+            };
+
+            try {
+                if (editMode === 'add') {
+                    await api.addStudent(data);
+                    showToast('添加成功');
+                } else {
+                    await api.updateStudent(data.sno, data);
+                    showToast('更新成功');
+                }
+                modal.hide();
+                loadStudents();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        async function deleteStudent(sno) {
+            if (!showConfirm('确定要删除该学生吗？')) return;
+            try {
+                await api.deleteStudent(sno);
+                showToast('删除成功');
+                loadStudents();
+            } catch (err) {
+                handleError(err);
+            }
+        }
+    </script>
+</body>
+
+</html>
