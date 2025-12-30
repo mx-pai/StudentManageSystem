@@ -25,7 +25,8 @@ public class LoginController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest req) {
-       return ResponseEntity.ok(ApiResponse.ok("登录成功", null));
+        LoginResponse data = loginService.login(req.name(), req.password());
+        return ResponseEntity.ok(ApiResponse.ok("登录成功", data));
     }
 
     @PostMapping("/register")

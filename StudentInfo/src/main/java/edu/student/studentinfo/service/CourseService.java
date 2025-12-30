@@ -3,8 +3,10 @@ package edu.student.studentinfo.service;
 import edu.student.studentinfo.common.BizException;
 import edu.student.studentinfo.common.DtoMapper;
 import edu.student.studentinfo.dto.request.CourseCreateRequest;
+import edu.student.studentinfo.dto.request.CourseUpdateRequest;
 import edu.student.studentinfo.dto.response.CourseResponse;
 import edu.student.studentinfo.entity.Course;
+import edu.student.studentinfo.entity.Student;
 import edu.student.studentinfo.repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,8 +49,33 @@ public class CourseService {
             throw new BizException(409, "课程号已存在");
         }
         Course c = DtoMapper.toCourseEntity(req);
+        int rows = courseRepository.save(c);
+        if (rows <= 0) {
+            throw new BizException(500, "新增课程失败");
+        }
+    }
 
-//        int rows = courseRepository.
+    public void update(String cno, CourseUpdateRequest req) {
+        Course old = courseRepository.findByCno(cno);
+        if (old == null) {
+            throw new BizException(404, "课程不存在");
+        }
+        Course c = DtoMapper.toCourseEntity(req);
+        int rows = courseRepository.update(c);
+        if (rows < 0) {
+            throw new BizException(500, "更新失败");
+        }
+    }
+
+    public void delete(String cno) {
+        Course old = courseRepository.findByCno(cno);
+        if (old == null) {
+            throw new BizException(404, "课程不存在");
+        }
+        int rows = courseRepository.deleteByCno(cno);
+        if (rows <= 0) {
+            throw new BizException(500, "删除失败");
+        }
     }
 }
 

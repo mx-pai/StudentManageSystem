@@ -29,7 +29,7 @@ public class StudentRepository {
     //添加学生
     public int save(Student student){
 
-        String sql = "INSERT INTO student(sno, sname, ssex, sbirthdate, smajor) VALUE (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO student(sno, sname, ssex, sbirthdate, smajor) VALUES (?, ?, ?, ?, ?)";
         return jdbcTemplate.update(sql,
                 student.getSno(),
                 student.getSname(),

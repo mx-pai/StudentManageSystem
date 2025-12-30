@@ -1,6 +1,7 @@
 package edu.student.studentinfo.common;
 
 import edu.student.studentinfo.dto.request.CourseCreateRequest;
+import edu.student.studentinfo.dto.request.CourseUpdateRequest;
 import edu.student.studentinfo.dto.request.StudentCreateRequest;
 import edu.student.studentinfo.dto.request.StudentUpdateRequest;
 import edu.student.studentinfo.dto.response.CourseResponse;
@@ -38,6 +39,14 @@ public class DtoMapper {
     public static Course toCourseEntity(CourseCreateRequest req) {
         Course c = new Course();
         c.setCno(req.cno());
+        c.setCname(req.cname());
+        c.setCcredit(req.ccredit());
+        c.setCpno(req.cpno());
+        return c;
+    }
+
+    public static Course toCourseEntity(CourseUpdateRequest req) {
+        Course c = new Course();
         c.setCname(req.cname());
         c.setCcredit(req.ccredit());
         c.setCpno(req.cpno());

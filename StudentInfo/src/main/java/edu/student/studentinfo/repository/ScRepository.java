@@ -44,13 +44,13 @@ public class ScRepository {
      }
 
      public Sc findOne(String sno, String cno) {
-        String sql = "select sno, sno, semester, teachingClass from sc where sno = ? and cno = ?";
+        String sql = "select * from sc where sno = ? and cno = ?";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Sc.class), sno, cno);
      }
 
     //查询学生平均成绩
     public Double getAverageGradeBySno(String sno) {
-        String sql = "select avg(grade) form sc where sno = ?";
+        String sql = "select avg(grade) from sc where sno = ?";
         return jdbcTemplate.queryForObject(sql, Double.class, sno);
     }
 
