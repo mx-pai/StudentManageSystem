@@ -40,7 +40,7 @@ public class StudentRepository {
     //删除学生
     public int deleteBySno(String sno){
         String sql = "DELETE FROM student where sno = ?";
-        return jdbcTemplate.update(sql);
+        return jdbcTemplate.update(sql, sno);
     }
     //更新学生
     public int update(Student student){

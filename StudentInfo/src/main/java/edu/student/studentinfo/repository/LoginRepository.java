@@ -20,6 +20,12 @@ public class LoginRepository {
         }
     }
 
+    public boolean existsByName(String name) {
+        String sql = "select count(1) from login where name = ?";
+        Integer cnt = jdbcTemplate.queryForObject(sql, Integer.class, name);
+        return cnt != null && cnt > 0;
+    }
+
     public int register(String name, String password) {
         String sql = "insert into login(name, password) values(?, ?)";
         return jdbcTemplate.update(sql, name, password);

@@ -19,7 +19,7 @@ public class CourseRepository {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Course.class));
     }
     //根据cno查询
-    public Course findByCno(Course cno) {
+    public Course findByCno(String cno) {
         String sql = "select * from course where cno = ?";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Course.class), cno);
     }
