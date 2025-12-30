@@ -1,5 +1,9 @@
 package edu.student.studentinfo.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import edu.student.studentinfo.common.BizException;
 import edu.student.studentinfo.dto.request.ScGradeUpdateRequest;
 import edu.student.studentinfo.dto.request.ScRequest;
@@ -11,9 +15,6 @@ import edu.student.studentinfo.repository.CourseRepository;
 import edu.student.studentinfo.repository.ScRepository;
 import edu.student.studentinfo.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,13 +29,17 @@ public class ScService {
                 sc.getCno(),
                 sc.getGrade(),
                 sc.getSemester(),
-                sc.getTeachingClass()
-        );
+                sc.getTeachingClass());
     }
 
-    public List<ScResponse> listAll() {
-        return scRepository.findALl()
-                .stream()
+    public List<ScResponse> listAll(String keyword) {
+        List<Sc> list;
+        if (keyword != null && !keyword.isBlank()) {
+            list = scRepository.search(keyword);
+        } else {
+            list = scRepository.findALl();
+        }
+        return list.stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -97,6 +102,5 @@ public class ScService {
         if (rows < 0)
             throw new BizException(500, "录入成绩失败");
     }
-
 
 }

@@ -20,6 +20,16 @@ public class ScRepository {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Sc.class));
     }
 
+    // 模糊查询选课记录
+    public List<Sc> search(String keyword) {
+        String sql = "SELECT sc.* FROM sc " +
+                "LEFT JOIN student s ON sc.sno = s.sno " +
+                "LEFT JOIN course c ON sc.cno = c.cno " +
+                "WHERE sc.sno LIKE ? OR sc.cno LIKE ? OR s.sname LIKE ? OR c.cname LIKE ?";
+        String param = "%" + keyword + "%";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Sc.class), param, param, param, param);
+    }
+
     // 根据学号查选选课成绩
     public List<Sc> findBySno(String sno) {
         String sql = "select * from sc where sno = ?";

@@ -18,9 +18,13 @@
         <div class="container-fluid">
             <div class="page-header">
                 <h2 id="pageTitle">选课管理</h2>
-                <button class="btn btn-primary" id="addBtn" onclick="openSelectModal()">
-                    <i class="bi bi-plus-lg me-1"></i>新增选课
-                </button>
+                <div class="d-flex gap-2">
+                    <input type="text" class="form-control" id="searchInput" placeholder="搜索学号、课程号..."
+                        style="width: 250px; display: none;">
+                    <button class="btn btn-primary" id="addBtn" onclick="openSelectModal()">
+                        <i class="bi bi-plus-lg me-1"></i>新增选课
+                    </button>
+                </div>
             </div>
 
             <div class="table-container">
@@ -123,6 +127,9 @@
             document.getElementById('addBtn').innerHTML = '<i class="bi bi-plus-lg me-1"></i>选课';
             document.getElementById('thSno').style.display = 'none'; // 隐藏学号列
             document.getElementById('snoGroup').style.display = 'none'; // 隐藏学号输入
+        } else {
+            // 老师显示搜索框
+            document.getElementById('searchInput').style.display = 'block';
         }
 
         let selectModal, gradeModal;
@@ -130,17 +137,22 @@
             selectModal = new bootstrap.Modal(document.getElementById('selectModal'));
             gradeModal = new bootstrap.Modal(document.getElementById('gradeModal'));
             loadSelections();
+
+            // 监听搜索输入
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                filterSelections(e.target.value);
+            });
         });
 
-        async function loadSelections() {
+        async function loadSelections(keyword = '') {
             try {
                 let res;
                 if (role === 'student') {
                     // 学生只能看自己的选课（用用户名当学号查询）
                     res = await api.getStudentSelections(currentUserName);
                 } else {
-                    // 老师可以看所有选课
-                    res = await api.getSelections();
+                    // 老师可以看所有选课，支持搜索
+                    res = await api.getSelections(keyword);
                 }
                 const selections = res.data.data || [];
                 const tbody = document.getElementById('tableBody');
@@ -189,6 +201,14 @@
             } catch (err) {
                 handleError(err);
             }
+        }
+
+        let searchTimeout;
+        function filterSelections(keyword) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadSelections(keyword);
+            }, 300);
         }
 
         function openSelectModal() {
@@ -242,6 +262,10 @@
             } catch (err) {
                 handleError(err);
             }
+        }
+
+        async function deleteCourse(sno, cno) {
+            dropCourse(sno, cno);
         }
 
         async function dropCourse(sno, cno) {

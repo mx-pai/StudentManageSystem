@@ -1,17 +1,23 @@
 package edu.student.studentinfo.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import edu.student.studentinfo.common.ApiResponse;
 import edu.student.studentinfo.dto.request.ScGradeUpdateRequest;
 import edu.student.studentinfo.dto.request.ScRequest;
 import edu.student.studentinfo.dto.response.ScResponse;
-import edu.student.studentinfo.entity.Sc;
 import edu.student.studentinfo.service.ScService;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,8 +26,8 @@ public class ScController {
     private final ScService scService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ScResponse>>> listAll() {
-        return ResponseEntity.ok(ApiResponse.ok("OK", scService.listAll()));
+    public ResponseEntity<ApiResponse<List<ScResponse>>> listAll(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(ApiResponse.ok("OK", scService.listAll(keyword)));
     }
 
     @GetMapping("/student/{sno}")
@@ -48,14 +54,10 @@ public class ScController {
 
     @PostMapping("/{sno}/{cno}/grade")
     public ResponseEntity<ApiResponse<Void>> updateGrade(@PathVariable String sno,
-                                                         @PathVariable String cno,
-                                                         @RequestBody ScGradeUpdateRequest req) {
+            @PathVariable String cno,
+            @RequestBody ScGradeUpdateRequest req) {
         scService.updateGrade(sno, cno, req);
         return ResponseEntity.ok(ApiResponse.ok("录入成绩成功", null));
     }
-
-
-
-
 
 }

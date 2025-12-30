@@ -18,9 +18,13 @@
         <div class="container-fluid">
             <div class="page-header">
                 <h2 id="pageTitle">课程管理</h2>
-                <button class="btn btn-primary" id="addBtn" onclick="openAddModal()" style="display:none;">
-                    <i class="bi bi-plus-lg me-1"></i>新增课程
-                </button>
+                <div class="d-flex gap-2">
+                    <input type="text" class="form-control" id="searchInput" placeholder="搜索课程号或课程名..."
+                        style="width: 250px;">
+                    <button class="btn btn-primary" id="addBtn" onclick="openAddModal()" style="display:none;">
+                        <i class="bi bi-plus-lg me-1"></i>新增课程
+                    </button>
+                </div>
             </div>
 
             <div class="table-container">
@@ -104,11 +108,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             modal = new bootstrap.Modal(document.getElementById('courseModal'));
             loadCourses();
+
+            // 监听搜索输入
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                filterCourses(e.target.value);
+            });
         });
 
-        async function loadCourses() {
+        async function loadCourses(keyword = '') {
             try {
-                const res = await api.getCourses();
+                const res = await api.getCourses(keyword);
                 const courses = res.data.data || [];
                 const tbody = document.getElementById('tableBody');
 
@@ -143,6 +152,14 @@
             } catch (err) {
                 handleError(err);
             }
+        }
+
+        let searchTimeout;
+        function filterCourses(keyword) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadCourses(keyword);
+            }, 300);
         }
 
         function openAddModal() {

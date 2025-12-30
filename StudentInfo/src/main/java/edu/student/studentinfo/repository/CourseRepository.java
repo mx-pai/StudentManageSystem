@@ -20,6 +20,13 @@ public class CourseRepository {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Course.class));
     }
 
+    // 模糊查询课程
+    public List<Course> search(String keyword) {
+        String sql = "select * from course where cno like ? or cname like ?";
+        String param = "%" + keyword + "%";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Course.class), param, param);
+    }
+
     // 根据cno查询
     public Course findByCno(String cno) {
         try {

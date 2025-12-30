@@ -1,5 +1,9 @@
 package edu.student.studentinfo.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import edu.student.studentinfo.common.BizException;
 import edu.student.studentinfo.common.DtoMapper;
 import edu.student.studentinfo.dto.request.StudentCreateRequest;
@@ -8,9 +12,6 @@ import edu.student.studentinfo.dto.response.StudentResponse;
 import edu.student.studentinfo.entity.Student;
 import edu.student.studentinfo.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +22,14 @@ public class StudentService {
         return new StudentResponse(s.getSno(), s.getSname(), s.getSsex(), s.getSbirthdate(), s.getSmajor());
     }
 
-    public List<StudentResponse> listAll() {
-        return studentRepository.findAll()
-                .stream()
+    public List<StudentResponse> listAll(String keyword) {
+        List<Student> students;
+        if (keyword != null && !keyword.isBlank()) {
+            students = studentRepository.search(keyword);
+        } else {
+            students = studentRepository.findAll();
+        }
+        return students.stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -75,6 +81,7 @@ public class StudentService {
             throw new BizException(500, "删除失败");
         }
     }
+
     public int count() {
         int count = studentRepository.count();
         if (count == 0) {

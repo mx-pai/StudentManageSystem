@@ -23,6 +23,13 @@ public class StudentRepository {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Student.class));
     }
 
+    // 模糊查询学生
+    public List<Student> search(String keyword) {
+        String sql = "SELECT * FROM student WHERE sno LIKE ? OR sname LIKE ? OR smajor LIKE ?";
+        String param = "%" + keyword + "%";
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Student.class), param, param, param);
+    }
+
     // 根据学号查询学生
     public Student findBySno(String sno) {
         try {

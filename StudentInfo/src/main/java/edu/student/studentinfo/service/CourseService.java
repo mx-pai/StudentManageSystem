@@ -1,17 +1,17 @@
 package edu.student.studentinfo.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import edu.student.studentinfo.common.BizException;
 import edu.student.studentinfo.common.DtoMapper;
 import edu.student.studentinfo.dto.request.CourseCreateRequest;
 import edu.student.studentinfo.dto.request.CourseUpdateRequest;
 import edu.student.studentinfo.dto.response.CourseResponse;
 import edu.student.studentinfo.entity.Course;
-import edu.student.studentinfo.entity.Student;
 import edu.student.studentinfo.repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,9 +26,14 @@ public class CourseService {
                 c.getCpno());
     }
 
-    public List<CourseResponse> listALl() {
-        return courseRepository.findAll()
-                .stream()
+    public List<CourseResponse> listALl(String keyword) {
+        List<Course> courses;
+        if (keyword != null && !keyword.isBlank()) {
+            courses = courseRepository.search(keyword);
+        } else {
+            courses = courseRepository.findAll();
+        }
+        return courses.stream()
                 .map(this::toReponse)
                 .toList();
     }
@@ -78,4 +83,3 @@ public class CourseService {
         }
     }
 }
-

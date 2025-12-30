@@ -7,7 +7,7 @@ const api = {
     register: (name, password) => axios.post(`${BASE_URL}/auth/register`, { name, password }),
 
     // 学生
-    getStudents: () => axios.get(`${BASE_URL}/students`),
+    getStudents: (keyword) => axios.get(`${BASE_URL}/students`, { params: { keyword } }),
     getStudent: (sno) => axios.get(`${BASE_URL}/students/${sno}`),
     addStudent: (data) => axios.post(`${BASE_URL}/students`, data),
     updateStudent: (sno, data) => axios.put(`${BASE_URL}/students/${sno}`, data),
@@ -15,14 +15,14 @@ const api = {
     countStudents: () => axios.get(`${BASE_URL}/students/count`),
 
     // 课程
-    getCourses: () => axios.get(`${BASE_URL}/courses`),
+    getCourses: (keyword) => axios.get(`${BASE_URL}/courses`, { params: { keyword } }),
     getCourse: (cno) => axios.get(`${BASE_URL}/courses/${cno}`),
     addCourse: (data) => axios.post(`${BASE_URL}/courses`, data),
     updateCourse: (cno, data) => axios.put(`${BASE_URL}/courses/${cno}`, data),
     deleteCourse: (cno) => axios.delete(`${BASE_URL}/courses/${cno}`),
 
     // 选课
-    getSelections: () => axios.get(`${BASE_URL}/sc`),
+    getSelections: (keyword) => axios.get(`${BASE_URL}/sc`, { params: { keyword } }),
     getStudentSelections: (sno) => axios.get(`${BASE_URL}/sc/student/${sno}`),
     getCourseSelections: (cno) => axios.get(`${BASE_URL}/sc/${cno}`),
     select: (data) => axios.post(`${BASE_URL}/sc`, data),
